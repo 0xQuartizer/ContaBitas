@@ -5,6 +5,7 @@ import {
   ref,
   onValue,
   runTransaction,
+  get,
 } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-database.js";
 
 // Your web app's Firebase configuration
@@ -19,6 +20,8 @@ const firebaseConfig = {
   appId: "1:246014622334:web:c3ac028657dd666c28b62f",
 };
 
+let countdown; // Global variable to keep track of the countdown
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
@@ -32,52 +35,40 @@ function getToday() {
 // Function to increase count
 function increaseCount() {
   const selectedRadio = document.querySelector('input[name="user"]:checked');
-  if (selectedRadio) {
-    // Check if a radio button is selected
-    const user = selectedRadio.value;
-    const today = getToday();
-    const now = new Date().toISOString();
-    const userRef = ref(database, `counts/${user}/${today}`);
-    runTransaction(userRef, (currentData) => {
-      if (currentData) {
-        return { count: currentData.count + 1, lastUpdated: now };
-      } else {
-        return { count: 1, lastUpdated: now };
-      }
-    });
-  } else {
-    // Optionally, do something if no radio is selected, like a warning message
+  if (!selectedRadio) {
     console.warn("No user selected.");
+    return;
   }
-  // After updating the count, change the button text and disable it
-  const increaseBtn = document.getElementById("increase-btn");
-  increaseBtn.textContent = "Calma leão";
-  increaseBtn.disabled = true;
+  const user = selectedRadio.value;
+  const today = getToday();
+  const userRef = ref(database, `counts/${user}/${today}`);
 
-  // Start the countdown timer
-  startCountdown(30);
-}
+  // Retrieve the current count before updating
+  get(userRef).then((snapshot) => {
+    const currentData = snapshot.val();
+    const currentCount = currentData ? currentData.count : 0;
 
-function startCountdown(duration) {
-  const timerLine = document.getElementById("timer-line");
-  let remainingTime = duration;
-  const interval = duration * 10; // Calculate the interval for the line as a percentage
+    // Show the overlay with the current count
+    document.getElementById("overlay").style.display = "flex";
+    const countDisplay = document.getElementById("count-display");
+    countDisplay.textContent = currentCount;
+    countDisplay.style.transform = "scale(1)";
 
-  // Show the timer line and initialize its width
-  timerLine.style.width = "100%";
-  timerLine.style.display = "block";
-
-  const countdown = setInterval(() => {
-    remainingTime--;
-    timerLine.style.width = `${(remainingTime / duration) * 100}%`; // Update the line width based on time remaining
-
-    if (remainingTime <= 0) {
-      clearInterval(countdown);
-      document.getElementById("increase-btn").textContent = "Increase Count";
-      document.getElementById("increase-btn").disabled = false;
-      timerLine.style.display = "none"; // Hide the timer line
-    }
-  }, 1000); // Update every second
+    // Update the count in Firebase
+    runTransaction(userRef, (data) => {
+      if (data) {
+        return { count: data.count + 1, lastUpdated: new Date().toISOString() };
+      } else {
+        return { count: 1, lastUpdated: new Date().toISOString() };
+      }
+    }).then(() => {
+      // Update to the new count and keep the overlay displayed
+      const countDisplay = document.getElementById("count-display");
+      countDisplay.textContent = currentCount + 1;
+      countDisplay.style.transform = "scale(1.5)"; // Enlarge effect
+      // Do not hide the overlay, so there is no need for the setTimeout function that hides it
+    });
+  });
 }
 
 // Function to update table with Firebase data and format date
