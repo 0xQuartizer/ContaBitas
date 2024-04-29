@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Counter App</title>
+  <link rel="stylesheet" type="txt/css" href="style.css">
+</head>
+
+<body>
+  <form id="user-selection">
+    <label>
+      <input type="radio" name="user" value="user1" checked>User 1
+    </label>
+    <label>
+      <input type="radio" name="user" value="user2">User 2
+    </label>
+    <label>
+      <input type="radio" name="user" value="user3">User 3
+    </label>
+  </form>
+  <button id="increase-btn">Increase Count</button>
+
+  <table>
+    <tr>
+      <th>User</th>
+      <th>Count</th>
+    </tr>
+    <tbody id="counts-table">
+      <!-- Rows added by JavaScript -->
+    </tbody>
+  </table>
+  <script type="module" src="app.js"></script>
+</body>
+
+</html>
