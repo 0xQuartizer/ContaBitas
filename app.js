@@ -41,6 +41,7 @@ function increaseCount() {
   }
   const user = selectedRadio.value;
   const today = getToday();
+  console.log("Current date and time:", today);
   const userRef = ref(database, `counts/${user}/${today}`);
 
   // Retrieve the current count before updating
@@ -72,6 +73,7 @@ function increaseCount() {
 }
 
 // Function to update table with Firebase data and format date
+// Function to update table with Firebase data and format date
 function updateTable() {
   const countsRef = ref(database, "counts");
   onValue(countsRef, (snapshot) => {
@@ -83,32 +85,37 @@ function updateTable() {
     tableBody.innerHTML = "";
     tableHeader.innerHTML = "<th>Date</th>"; // Reset headers with the Date column
 
-    // First, find all unique dates and user IDs
-    const dates = new Set();
-    Object.values(users).forEach((userDates) => {
-      Object.keys(userDates).forEach((date) => {
-        dates.add(date);
-      });
-    });
-
-    // Create headers for users
+    // Create headers for users with friendly names
+    const userFriendlyNames = {
+      user1: "Carlota",
+      user2: "David",
+      user3: "Gil",
+    };
     Object.keys(users).forEach((user) => {
       const th = document.createElement("th");
-      th.textContent = user;
+      th.textContent = userFriendlyNames[user];
       tableHeader.appendChild(th);
     });
 
+    // Find all unique dates and sort them
+    const dates = Object.values(users).reduce((acc, userDates) => {
+      return acc.concat(Object.keys(userDates));
+    }, []);
+    const uniqueDates = [...new Set(dates)].sort(
+      (a, b) => new Date(b) - new Date(a),
+    ); // Sort dates in descending order
+
     // Create rows for each date
-    dates.forEach((date) => {
+    uniqueDates.forEach((date) => {
       const tr = document.createElement("tr");
       const dateTd = document.createElement("td");
       dateTd.textContent = date;
       tr.appendChild(dateTd);
 
-      // Create a cell for each user on that date
-      Object.keys(users).forEach((user) => {
+      // Create a cell for each user on that date with friendly names
+      Object.keys(userFriendlyNames).forEach((userKey) => {
         const td = document.createElement("td");
-        const userDate = users[user][date];
+        const userDate = users[userKey] ? users[userKey][date] : null;
         td.textContent = userDate ? userDate.count : "0"; // If there's no count, display '0'
         tr.appendChild(td);
       });
